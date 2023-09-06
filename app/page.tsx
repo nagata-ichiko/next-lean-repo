@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import Image from "next/image"
 import styles from "./page.module.css"
 import type { NextPage } from "next"
@@ -9,7 +9,7 @@ import * as Yup from "yup"
 import { IconDatabase } from "@tabler/icons"
 import { ShieldCheckIcon } from "@heroicons/react/solid"
 import { ExclamationCircleIcon } from "@heroicons/react/outline"
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import {
   Anchor,
   TextInput,
@@ -21,7 +21,7 @@ import {
 import { useForm, yupResolver } from "@mantine/form"
 import { Layout } from "./components/Layout"
 import { AuthForm } from "./types"
-import "tailwindcss/tailwind.css";
+import "tailwindcss/tailwind.css"
 
 const schema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("No email provided"),
@@ -30,25 +30,22 @@ const schema = Yup.object().shape({
     .min(5, "Password should be min 5 chars"),
 })
 
-axios.defaults.withCredentials = true
-const getCsrfToken = async () => {
-const { data } = await axios.get(
-`${process.env.NEXT_PUBLIC_API_URL}/auth/csrf`
-)
-axios.defaults.headers.common['csrf-token'] = data.csrfToken
-}
+// // axios.defaults.withCredentials = true
+// // const getCsrfToken = async () => {
+// // const { data } = await axios.get(
+// // `${process.env.NEXT_PUBLIC_API_URL}/auth/csrf`
+// // )
+// // axios.defaults.headers.common['csrf-token'] = data.csrfToken
+// // }
 
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
-
-
+// const queryClient = new QueryClient({
+//   defaultOptions: {
+//     queries: {
+//       retry: false,
+//       refetchOnWindowFocus: false,
+//     },
+//   },
+// })
 
 export default function Home() {
   const router = useRouter()
@@ -62,7 +59,7 @@ export default function Home() {
     },
   })
   const handleSubmit = async () => {
-    getCsrfToken()
+    // getCsrfToken()
     try {
       if (isRegister) {
         await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
