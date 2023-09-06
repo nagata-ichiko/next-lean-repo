@@ -1,95 +1,140 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+import Image from "next/image"
+import styles from "./page.module.css"
+import type { NextPage } from "next"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import * as Yup from "yup"
+import { IconDatabase } from "@tabler/icons"
+import { ShieldCheckIcon } from "@heroicons/react/solid"
+import { ExclamationCircleIcon } from "@heroicons/react/outline"
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import {
+  Anchor,
+  TextInput,
+  Button,
+  Group,
+  PasswordInput,
+  Alert,
+} from "@mantine/core"
+import { useForm, yupResolver } from "@mantine/form"
+import { Layout } from "./components/Layout"
+import { AuthForm } from "./types"
+import "tailwindcss/tailwind.css";
+
+const schema = Yup.object().shape({
+  email: Yup.string().email("Invalid email").required("No email provided"),
+  password: Yup.string()
+    .required("No password provided")
+    .min(5, "Password should be min 5 chars"),
+})
+
+axios.defaults.withCredentials = true
+const getCsrfToken = async () => {
+const { data } = await axios.get(
+`${process.env.NEXT_PUBLIC_API_URL}/auth/csrf`
+)
+axios.defaults.headers.common['csrf-token'] = data.csrfToken
+}
+
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+})
+
+
 
 export default function Home() {
+  const router = useRouter()
+  const [isRegister, setIsRegister] = useState(false)
+  const [error, setError] = useState("")
+  const form = useForm<AuthForm>({
+    validate: yupResolver(schema),
+    initialValues: {
+      email: "",
+      password: "",
+    },
+  })
+  const handleSubmit = async () => {
+    getCsrfToken()
+    try {
+      if (isRegister) {
+        await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
+          email: form.values.email,
+          password: form.values.password,
+        })
+      }
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        email: form.values.email,
+        password: form.values.password,
+      })
+      form.reset()
+      router.push("/dashboard")
+    } catch (e: any) {
+      setError(e.response.data.message)
+    }
+  }
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <Layout title="Auth">
+      <ShieldCheckIcon className="h-16 w-16 text-blue-500" />
+      {error && (
+        <Alert
+          my="md"
+          variant="filled"
+          icon={<ExclamationCircleIcon />}
+          title="Authorization Error"
+          color="red"
+          radius="md"
+        >
+          {error}
+        </Alert>
+      )}
+      <form onSubmit={form.onSubmit(handleSubmit)}>
+        <TextInput
+          mt="md"
+          id="email"
+          label="Email*"
+          placeholder="example@gmail.com"
+          {...form.getInputProps("email")}
         />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+        <PasswordInput
+          mt="md"
+          id="password"
+          placeholder="password"
+          label="Password*"
+          description="Must be min 5 char"
+          {...form.getInputProps("password")}
+        />
+        <Group mt="xl" position="apart">
+          <Anchor
+            component="button"
+            type="button"
+            size="xs"
+            className="text-gray-300"
+            onClick={() => {
+              setIsRegister(!isRegister)
+              setError("")
+            }}
+          >
+            {isRegister
+              ? "Have an account? Login"
+              : "Don't have an account? Register"}
+          </Anchor>
+          <Button
+            leftIcon={<IconDatabase size={14} />}
+            color="cyan"
+            type="submit"
+          >
+            {isRegister ? "Register" : "Login"}
+          </Button>
+        </Group>
+      </form>
+    </Layout>
+  )
 }
