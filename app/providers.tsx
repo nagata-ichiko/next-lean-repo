@@ -21,20 +21,14 @@ const queryClient = new QueryClient({
 })
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  axios.defaults.withCredentials = true
+  axios.defaults.withCredentials = false
   useEffect(() => {
     const getCsrfToken = async () => {
       const { data } = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/csrf`
       )
       axios.defaults.headers.common["csrf-token"] = data.csrfToken
-
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/csrf`, {
-        method: "GET",
-      }).then((data) => {
-        console.log("data", data.csrfToken)
-        axios.defaults.headers.common["csrf-token"] = data.csrfToken
-      })
+      console.log("data", data.csrfToken)
     }
     getCsrfToken()
   }, [])
